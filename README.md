@@ -7,8 +7,8 @@ Este repositorio contiene el desarrollo del backend (API REST) para dar soporte 
 * **Nombre del Proyecto:** `Hexa TCG API`
 * **Coordinador / PM:** `Juan Cruz Espinoza`
 * **Integrantes del Grupo:**
-  * `Juan Cruz Espinoza` - FAI-4767 ([JuanEspinoza8](https://github.com/JuanEspinoza8))
-  * `Lautaro Mellado` - FAI-2659 ([LautyM22](https://github.com/LautyM22))
+  * `Juan Cruz Espinoza` - FAI-4767 ([LautyM22](https://github.com/LautyM22))
+  * `Lautaro Mellado` - FAI-2659 ([JuanEspinoza8](https://github.com/JuanEspinoza8))
   * `Gonzalo Molina` - 42524 ([gonzalomolina-void](https://github.com/gonzalomolina-void))
 * **Link al Repositorio Frontend:** [pwatpo2react2](https://github.com/gonzalomolina-void/pwatpo2react2)
 * **Link al Tablero Kanban:** `[Pendiente]`
@@ -142,6 +142,26 @@ Inicia el servidor Express localmente con recarga automática (`nodemon`):
 pnpm dev
 ```
 La API estará corriendo por defecto en `http://localhost:3000`.
+
+---
+
+## Pruebas de la API (Bruno)
+
+Para testear los endpoints de la API de forma local y colaborativa, implementamos una colección de **[Bruno](https://usebruno.com/)**, una alternativa open-source, offline-first y git-friendly a Postman.
+
+### 1. Instalación de Bruno
+Podés descargar e instalar Bruno en tu sistema operativo desde su sitio oficial:
+* [Descargar Bruno](https://www.usebruno.com/downloads) (disponible para Windows, macOS y Linux).
+
+### 2. Cómo usar la colección local
+1. Inicia la aplicación **Bruno**.
+2. Selecciona **"Open Collection"** (Abrir colección) en la pantalla de inicio.
+3. Busca y selecciona la carpeta [bruno/](/bruno/) que está en la raíz de este proyecto.
+4. En el selector de entornos ubicado arriba a la derecha (donde dice *No Environment*), selecciona **Development**. Esto cargará la variable de entorno `baseUrl` configurada como `http://localhost:3000`.
+
+### 3. Flujo de Autenticación Automático
+La colección tiene configurado un script post-response en la petición de **Login** (`POST /api/auth/login`). Al iniciar sesión exitosamente, el token JWT se guarda de manera automática en la variable de entorno de tiempo de ejecución `token`.
+Los endpoints que requieren autenticación (como **Get Me**) ya están configurados para usar esta variable `{{token}}` automáticamente en la cabecera de tipo Bearer Token.
 
 ---
 
