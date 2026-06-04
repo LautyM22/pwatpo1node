@@ -167,15 +167,15 @@ Este documento contiene la planificación del desarrollo del Backend (Node.js, E
 **Para** mantener seguras las credenciales y permitir que el frontend se comunique con la API de manera controlada.
 
 * **Criterios de Aceptación:**
-  * Debe existir un archivo `.env.example` que declare variables como `DATABASE_URL`, `PORT` y `FRONTEND_URL` sin exponer valores sensibles.
-  * El archivo `.env` real debe estar listado en `.gitignore`.
-  * Se debe configurar CORS permitiendo peticiones desde la URL indicada en `FRONTEND_URL`.
+  * [x] Debe existir un archivo `.env.example` que declare variables como `DATABASE_URL`, `PORT` y `FRONTEND_URL` sin exponer valores sensibles.
+  * [x] El archivo `.env` real debe estar listado en `.gitignore`.
+  * [ ] Se debe configurar CORS permitiendo peticiones desde la URL indicada en `FRONTEND_URL`.
 
 * **Tareas Técnicas:**
-  * Crear `.gitignore` y agregar `.env`.
-  * Crear `.env.example` y `.env` con las variables correspondientes.
-  * Instalar el paquete `cors`.
-  * Registrar el middleware de CORS en Express, vinculándolo dinámicamente con la variable de entorno `FRONTEND_URL`.
+  * [x] Crear `.gitignore` y agregar `.env`.
+  * [x] Crear `.env.example` y `.env` con las variables correspondientes.
+  * [ ] Instalar el paquete `cors`.
+  * [ ] Registrar el middleware de CORS en Express, vinculándolo dinámicamente con la variable de entorno `FRONTEND_URL`.
 
 ---
 
