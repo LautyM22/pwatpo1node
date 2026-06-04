@@ -1,0 +1,414 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TPExpress API",
+    "version": "1.0.0",
+    "description": "API REST para gestionar cartas coleccionables, desarrollada para la materia PWA (Universidad Nacional del Comahue). Reemplaza la persistencia en localStorage por una base de datos PostgreSQL persistida en tiempo real con Prisma ORM."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor de Desarrollo Local"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Verificar la salud de la API",
+        "description": "Retorna el estado de disponibilidad del servidor.",
+        "responses": {
+          "200": {
+            "description": "API funcionando correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "message": { "type": "string", "example": "API funcionando correctamente" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards": {
+      "get": {
+        "summary": "Obtener catálogo de cartas",
+        "description": "Retorna el listado de cartas. Soporta internacionalización (mediante la cabecera Accept-Language) y paginación opcional. Si no se envía paginación, retorna todo el catálogo limitado a un tope de seguridad de 500 registros.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página a retornar (1-indexed). Se requiere junto con limit.",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Cantidad de elementos por página. Se requiere junto con page.",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "Idioma preferido para los textos de las cartas ('es' o 'en'). Por defecto es 'es'.",
+            "required": false,
+            "schema": { "type": "string", "enum": ["es", "en"], "default": "es" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listado de cartas obtenido correctamente",
+            "headers": {
+              "X-Total-Count": {
+                "schema": { "type": "integer" },
+                "description": "Total general de cartas disponibles en la base de datos (solo se incluye cuando la petición es paginada)."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Card" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/{id}": {
+      "get": {
+        "summary": "Obtener detalle de una carta por ID",
+        "description": "Retorna la información completa de una carta específica mapeada al idioma solicitado.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador entero único de la carta.",
+            "required": true,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "Idioma preferido para los textos de la carta ('es' o 'en').",
+            "required": false,
+            "schema": { "type": "string", "enum": ["es", "en"], "default": "es" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de la carta obtenido correctamente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Card" }
+              }
+            }
+          },
+          "400": {
+            "description": "ID inválido (no es un entero)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Datos inválidos" },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": { "type": "string", "example": "id" },
+                          "message": { "type": "string", "example": "El ID de la carta debe ser un número entero válido" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Carta no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Recurso no encontrado" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Registrar un nuevo usuario",
+        "description": "Crea una nueva cuenta de usuario en el sistema. Valida que el email tenga un formato correcto y no esté duplicado, y que la contraseña sea segura (mínimo 6 caracteres).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "usuario@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario registrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos o email ya registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Datos invalidos"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": {
+                            "type": "string",
+                            "example": "email"
+                          },
+                          "message": {
+                            "type": "string",
+                            "example": "El formato del email es invalido"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Iniciar sesión",
+        "description": "Autentica un usuario con sus credenciales (email y contraseña) y retorna un token JWT válido por 24 horas junto con los datos del usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "usuario@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sesión iniciada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales incompletas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Credenciales incompletas"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Debes proporcionar email y contraseña"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Credenciales invalidas"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "El email o la contraseña son incorrectos"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Obtener información del usuario autenticado",
+        "description": "Retorna el perfil del usuario correspondiente al token JWT provisto en la cabecera Authorization.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil de usuario obtenido correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado (token faltante, inválido o expirado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Token invalido"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "El token de autenticacion provisto es invalido o ha expirado"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Card": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "cost": { "type": "integer", "example": 5 },
+          "atk": { "type": "integer", "example": 8 },
+          "def": { "type": "integer", "example": 10 },
+          "image": { "type": "string", "example": "SirKaelen.webp" },
+          "type": { "type": "string", "example": "Criatura" },
+          "rarity": { "type": "string", "example": "Legendario" },
+          "name": { "type": "string", "example": "Sir Kaelen" },
+          "description": { "type": "string", "example": "El último guardián del Sol Blanco. Su espada no conoce el miedo." }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "usuario@example.com"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-01T18:52:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-01T18:52:00.000Z"
+          }
+        }
+      }
+    }
+  }
+}
