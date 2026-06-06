@@ -44,7 +44,6 @@ export async function getAllCards(page, limit, lang) {
   });
 
   const total = await prisma.card.count();
-  
   const flattenedCards = cards.map(card => flattenCard(card, lang));
   return {
     cards: flattenedCards,

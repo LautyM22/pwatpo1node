@@ -14,12 +14,9 @@ export async function getAllCardsController(req, res) {
     res.status(200).json(cards);
 }
 
-
 export async function getCardByIdController(req, res) {
   const id = req.params.id;
-  
   const lang = req.query.lang;
-  
   const acceptLanguage = req.headers['accept-language'];
   
   const langFinal = await getLanguage(lang, acceptLanguage);

@@ -3,7 +3,7 @@ import { getAllCardsController, getCardByIdController } from '../controllers/car
 
 const router = express.Router();
 
-router.get('/', getAllCardsController);
-router.get('/:id', getCardByIdController);
+router.get('/cards', getAllCardsController);
+router.get('/cards/:id', getCardByIdController);
 
 export default router;
