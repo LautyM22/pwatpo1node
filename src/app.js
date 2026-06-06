@@ -2,21 +2,22 @@ import express from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { createRequire } from 'module';
-import cardRoutes from './routes/card.routes.js';
+import cardRoutes from './routes/cardRoutes.js';
 import authRoutes from './routes/auth.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
-
 const require = createRequire(import.meta.url);
 const swaggerDocument = require('../docs/swagger.json');
-
 const app = express();
 
 // Middlewares
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 app.use(express.json());
+// Middleware global de errores
+app.use(errorHandler);
 
+// Registrar rutas
 // Servir documentación de Swagger interactiva
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -28,13 +29,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Registrar rutas
 app.use('/api', cardRoutes);
 app.use('/api', authRoutes);
 app.use('/api', favoriteRoutes);
-
-
-// Middleware global de errores
-app.use(errorHandler);
 
 export default app;
