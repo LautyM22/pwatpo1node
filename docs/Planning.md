@@ -12,10 +12,10 @@ Este documento contiene la planificación del desarrollo del Backend (Node.js, E
 * [US 4: Endpoints de Lectura de la API (GET)](#us-4-endpoints-de-lectura-de-la-api-get)
 * [US 5: Endpoints de Escritura de la API con Validación Manual (POST, PUT, DELETE)](#us-5-endpoints-de-escritura-de-la-api-con-validación-manual-post-put-delete)
 * [US 6: Variables de Entorno y CORS](#us-6-variables-de-entorno-y-cors)
-* [US 7: Integración Básica del Frontend (Lectura y Estados de UI)](#us-7-integración-básica-del-frontend-lectura-y-estados-de-ui)
-* [US 8: Integración Avanzada del Frontend / Postman (Modificaciones del CRUD)](#us-8-integración-avanzada-del-frontend--postman-modificaciones-del-crud)
 * [US 9: Despliegue en Producción (Backend, Base de Datos y Frontend)](#us-9-despliegue-en-producción-backend-base-de-datos-y-frontend)
-* [US 10 (Bonus): Documentación Interactiva con Swagger](#us-10-bonus-documentación-interactiva-con-swagger)
+* [US 11: Sistema de Autenticación de Usuarios (Registro/Login con JWT)](#us-11-sistema-de-autenticación-de-usuarios-registrologin-con-jwt)
+* [US 12: Endpoints para Gestión de Favoritos Relacionados con el Usuario](#us-12-endpoints-para-gestión-de-favoritos-relacionados-con-el-usuario)
+* [US 13: Configuración e Implementación de Pruebas Unitarias](#us-13-configuración-e-implementación-de-pruebas-unitarias)
 
 ---
 
@@ -89,36 +89,58 @@ Este documento contiene la planificación del desarrollo del Backend (Node.js, E
 
 ### US 4: Endpoints de Lectura de la API (GET)
 **Como** consumidor de la API  
-**Quiero** obtener todos los registros o uno específico a partir de su ID desde la base de datos  
-**Para** poder visualizarlos en la interfaz del cliente.
+**Quiero** obtener todas las cartas (con soporte opcional de paginación e internacionalización) o una específica a partir de su ID desde la base de datos  
+**Para** poder visualizarlas en la interfaz del cliente adaptándose al paginado del frontend, reduciendo el procesamiento en el cliente y mostrando la información en el idioma correcto.
 
 * **Criterios de Aceptación:**
-  * `GET /api/entidad` debe retornar todos los registros de la entidad con status `200 OK`.
-  * `GET /api/entidad/:id` debe retornar el registro correspondiente al ID indicado con status `200 OK`.
-  * Si el recurso consultado por ID no existe, se debe responder con status `404 Not Found` y el JSON:
+  * `GET /api/cards` y `GET /api/cards/:id` deben soportar internacionalización (idiomas `'es'` y `'en'`) mediante la **estrategia híbrida**:
+    * Se debe buscar el idioma en el query parameter `lang` (ej. `?lang=en`).
+    * Si no se provee, se debe buscar en la cabecera HTTP `Accept-Language` (ej. `Accept-Language: en`).
+    * Si no se detecta ninguno, se debe usar el idioma por defecto `'es'` (español).
+    * La respuesta JSON debe retornar los campos traducidos de forma **aplanada** en el objeto raíz (los campos `name` y `description` de la carta, así como el campo `name` del tipo de carta y de la rareza, deben mapearse directamente según el idioma solicitado, ocultando la estructura interna relacional de traducción).
+  * `GET /api/cards` debe retornar los registros de la entidad `Card` con status `200 OK` en formato de array JSON plano.
+  * `GET /api/cards` debe soportar paginación opcional utilizando los query parameters `page` (número de página, comenzando en 1) y `limit` (cantidad de elementos por página) emulando el comportamiento de **mockapi.io**:
+    * La respuesta del body debe ser un **array JSON plano** (sin envolver en objetos adicionales) conteniendo solo los elementos de la página seleccionada.
+    * La respuesta debe incluir el header HTTP **`X-Total-Count`** con el total de registros en la base de datos (para que el frontend calcule el total de páginas).
+    * Si no se especifican `page` o `limit`, se debe retornar el listado completo.
+  * `GET /api/cards/:id` debe retornar la carta correspondiente al ID indicado con status `200 OK`.
+  * Si la carta consultada por ID no existe, se debe responder con status `404 Not Found` y el JSON:
     ```json
     {
       "error": "Recurso no encontrado"
     }
     ```
   * Toda la información debe obtenerse de la base de datos a través de Prisma (no en arrays en memoria ni archivos JSON).
+  * Debe existir un endpoint (ej. `/api/docs`) que cargue la interfaz de Swagger UI para documentar y probar interactivamente los endpoints de lectura (`GET /api/cards` y `GET /api/cards/:id`).
+  * Los endpoints de lectura deben poder probarse y validarse exitosamente mediante una colección de Bruno.
 
 * **Tareas Técnicas:**
   * Crear las rutas y controladores para las peticiones de lectura (`getAll` y `getById`).
-  * Implementar los servicios que se comunican con Prisma para consultar la base de datos.
+  * En los controladores de lectura, determinar el idioma objetivo buscando en `req.query.lang` o `req.headers['accept-language']`, aplicando `'es'` como fallback por defecto si no son válidos o no están presentes.
+  * En el controlador `getAll`, capturar `page` y `limit` desde `req.query`, parseándolos a enteros.
+  * Implementar el servicio que consulta a la base de datos usando Prisma:
+    * Incluir las relaciones de traducciones para `Card`, `CardType` y `Rarity`.
+    * Si hay parámetros de paginación, aplicar `skip: (page - 1) * limit` y `take: limit`.
+  * Realizar un conteo total (`count()`) en la base de datos cuando se solicita paginación para poder setear el header `X-Total-Count` en la respuesta.
+  * Crear una función utilitaria para mapear y aplanar la respuesta relacional de Prisma al formato de respuesta JSON aplanado esperado por el frontend.
   * Configurar un middleware de manejo de errores global (`src/middlewares/errorHandler.js`) para capturar fallos inesperados y retornar status `500`.
+  * Instalar `swagger-ui-express` y `swagger-jsdoc` (o preparar un archivo `swagger.json` estático).
+  * Configurar e inicializar Swagger en `src/app.js`.
+  * Escribir la especificación OpenAPI de los endpoints de lectura.
+  * Crear una colección de Bruno para probar los endpoints de lectura (`GET /api/cards` con internacionalización y paginación, y `GET /api/cards/:id`).
 
 ---
 
 ### US 5: Endpoints de Escritura de la API con Validación Manual (POST, PUT, DELETE)
 **Como** consumidor de la API  
-**Quiero** poder crear, modificar y eliminar registros en la base de datos validando los datos de entrada  
+**Quiero** poder crear, modificar y eliminar cartas en la base de datos validando los datos de entrada  
 **Para** garantizar la integridad del sistema sin depender de librerías externas de validación.
 
 * **Criterios de Aceptación:**
-  * `POST /api/entidad` debe crear un registro y responder con status `201 Created`.
-  * `PUT /api/entidad/:id` debe actualizar un registro existente y responder con status `200 OK`.
-  * `DELETE /api/entidad/:id` debe eliminar el registro y responder con status `200 OK` o `204 No Content`.
+  * `POST /api/cards` debe crear una carta y responder con status `201 Created`.
+  * `PUT /api/cards/:id` debe actualizar una carta existente y responder con status `200 OK`.
+  * `DELETE /api/cards/:id` debe eliminar la carta y responder con status `200 OK` o `204 No Content`.
+  * Se deben poder crear y actualizar los datos en múltiples idiomas (soportando tanto español `'es'` como inglés `'en'`).
   * Se deben validar los datos del body de forma **manual** (usando JavaScript puro, sin librerías tipo Zod/Joi). Se debe validar:
     * Campos obligatorios presentes.
     * Strings no vacíos.
@@ -134,12 +156,16 @@ Este documento contiene la planificación del desarrollo del Backend (Node.js, E
       ]
     }
     ```
+  * Los endpoints de escritura (`POST`, `PUT`, `DELETE`) deben estar documentados en la interfaz interactiva de Swagger UI (ej. `/api/docs`), detallando los esquemas de datos requeridos en el body y los posibles códigos de respuesta (`200`, `201`, `400`, `404`, `500`).
+  * Los endpoints de escritura deben poder probarse y validarse exitosamente mediante una colección de Bruno.
 
 * **Tareas Técnicas:**
-  * Implementar las funciones de validación manual en `src/validations/entity.validation.js`.
+  * Implementar las funciones de validación manual en `src/validations/card.validation.js`.
   * Crear controladores para `create`, `update` y `delete`.
   * Agregar la validación antes de llamar al servicio de creación/edición.
   * Conectar con Prisma para ejecutar operaciones de persistencia e implementar lógica de manejo del error `404` si el ID a modificar o eliminar no existe en la base de datos.
+  * Escribir la especificación OpenAPI de los endpoints de escritura.
+  * Crear una colección de Bruno para probar los endpoints de escritura (`POST`, `PUT` y `DELETE`) contemplando flujos de datos correctos e inválidos (errores `400` y `404`).
 
 ---
 
@@ -159,43 +185,7 @@ Este documento contiene la planificación del desarrollo del Backend (Node.js, E
   * Instalar el paquete `cors`.
   * Registrar el middleware de CORS en Express, vinculándolo dinámicamente con la variable de entorno `FRONTEND_URL`.
 
----
 
-### US 7: Integración Básica del Frontend (Lectura y Estados de UI)
-**Como** usuario de la aplicación React  
-**Quiero** visualizar la información provista por la API y conocer el estado de la comunicación con el servidor (carga o error)  
-**Para** tener una experiencia de usuario fluida y transparente sin datos mockeados en `localStorage`.
-
-* **Criterios de Aceptación:**
-  * Se debe eliminar el uso de `localStorage` para la persistencia del estado en el frontend.
-  * Al ingresar, el frontend debe consultar a la API para traer los elementos y mostrarlos.
-  * Mientras se obtienen los datos, debe mostrarse un estado de carga claro (spinner, skeleton o texto).
-  * Si la conexión con la API falla o devuelve un error, se debe mostrar un mensaje de error descriptivo en pantalla.
-  * Si la base de datos está vacía, se debe mostrar un mensaje que indique que no hay elementos cargados.
-
-* **Tareas Técnicas:**
-  * Reemplazar las lecturas directas a `localStorage` por llamadas HTTP (usando `fetch` o `axios`).
-  * Agregar estados de React (`isLoading`, `error`) para controlar el renderizado condicional del spinner y mensajes de error.
-  * Adaptar el flujo de búsquedas y filtrados para que, si corresponde, consulte al backend.
-
----
-
-### US 8: Integración Avanzada del Frontend / Postman (Modificaciones del CRUD)
-**Como** usuario o administrador  
-**Quiero** poder realizar modificaciones (crear, editar, borrar) desde la UI del Frontend (o mediante Postman/Swagger si la UI no lo soporta)  
-**Para** gestionar los datos persistidos en tiempo real.
-
-* **Criterios de Aceptación:**
-  * Al realizar una acción de creación, edición o eliminación de forma exitosa, la interfaz gráfica debe actualizarse para reflejar los cambios (sin recargar toda la página).
-  * Si la operación de escritura falla, la interfaz debe mostrar un mensaje advirtiendo al usuario de manera clara.
-  * Las acciones no soportadas por la UI de React deberán poder realizarse y probarse exitosamente usando herramientas como Postman o Swagger.
-
-* **Tareas Técnicas:**
-  * Conectar los formularios de creación y edición del frontend a los endpoints correspondientes de la API backend.
-  * Implementar el manejo del botón "Eliminar" conectándolo con la API.
-  * Manejar los casos de error del backend (como el error `400` de validación) y renderizarlos en los formularios.
-
----
 
 ### US 9: Despliegue en Producción (Backend, Base de Datos y Frontend)
 **Como** usuario final  
@@ -216,26 +206,70 @@ Este documento contiene la planificación del desarrollo del Backend (Node.js, E
 
 ---
 
-### US 10 (Bonus): Documentación Interactiva con Swagger
-**Como** desarrollador integrador  
-**Quiero** contar con documentación interactiva de la API  
-**Para** conocer y probar rápidamente los endpoints, sus cuerpos de datos requeridos y los códigos de respuesta esperados.
+### US 11: Sistema de Autenticación de Usuarios (Registro/Login con JWT)
+**Como** administrador de la aplicación  
+**Quiero** que los usuarios puedan registrarse e iniciar sesión de manera segura  
+**Para** proteger las rutas que modifican datos y personalizar la experiencia del usuario.
 
 * **Criterios de Aceptación:**
-  * Debe existir un endpoint (ej. `/api/docs`) que cargue la interfaz de Swagger UI.
-  * La documentación debe listar todos los endpoints del CRUD con descripciones, parámetros esperados, cuerpos JSON de ejemplo y posibles códigos de respuesta (`200`, `201`, `400`, `404`, `500`).
+  * `POST /api/auth/register` debe crear un usuario con `email` y `password` (hasheado con `bcryptjs`) y retornar status `201 Created`.
+  * Si el email ya está registrado, debe retornar status `400 Bad Request` y un mensaje de error claro.
+  * `POST /api/auth/login` debe validar el email y la contraseña. Si son correctos, retornar status `200 OK` con un token JWT firmado.
+  * Si las credenciales son inválidas, retornar status `401 Unauthorized`.
+  * Debe implementarse un middleware de autenticación (`requireAuth`) para validar el token JWT enviado en la cabecera `Authorization: Bearer <token>` y añadir el usuario autenticado a `req.user`.
 
 * **Tareas Técnicas:**
-  * Instalar `swagger-ui-express` y `swagger-jsdoc` (o preparar un archivo `swagger.json` estático).
-  * Configurar e inicializar Swagger en `src/app.js`.
-  * Escribir la especificación OpenAPI de los endpoints (ya sea con anotaciones JSDoc en las rutas o en un archivo centralizado).
+  * Crear el modelo `User` en `prisma/schema.prisma` y ejecutar la migración.
+  * Instalar las librerías `bcryptjs` y `jsonwebtoken`.
+  * Implementar las funciones de validación para registro y login.
+  * Crear el controlador y las rutas de autenticación.
+  * Crear el middleware `src/middlewares/auth.js` para la protección de rutas.
+
+---
+
+### US 12: Endpoints para Gestión de Favoritos Relacionados con el Usuario
+**Como** usuario autenticado  
+**Quiero** guardar y eliminar mis cartas favoritas en la base de datos  
+**Para** no perder mi colección personal al cambiar de navegador o dispositivo.
+
+* **Criterios de Aceptación:**
+  * `GET /api/favorites` debe retornar la lista de cartas favoritas del usuario autenticado con status `200 OK`. Debe soportar internacionalización (estrategia híbrida y aplanada en el objeto raíz).
+  * `POST /api/favorites` debe agregar la carta indicada por `cardId` en el body a la lista de favoritos del usuario autenticado, retornando status `201 Created`.
+  * Si el `cardId` no existe, retornar status `404 Not Found`.
+  * `DELETE /api/favorites/:cardId` debe remover la carta indicada de los favoritos del usuario autenticado con status `200 OK` o `204 No Content`.
+  * Todas las rutas de favoritos deben estar protegidas por el middleware de autenticación (`requireAuth`).
+
+* **Tareas Técnicas:**
+  * Crear el modelo `Favorite` en `prisma/schema.prisma` vinculando `userId` y `cardId` con clave compuesta única, y ejecutar la migración.
+  * Implementar el controlador y las rutas para la gestión de favoritos.
+  * Conectar las consultas con Prisma e integrar la función utilitaria de aplanado de i18n en `GET /api/favorites`.
+
+---
+
+### US 13: Configuración e Implementación de Pruebas Unitarias
+**Como** desarrollador  
+**Quiero** configurar un entorno de pruebas unitarias y escribir tests para controladores y servicios  
+**Para** asegurar la calidad del código, evitar regresiones y validar el comportamiento lógico de la API de forma automatizada.
+
+* **Criterios de Aceptación:**
+  * Configurar un framework de pruebas moderno (se sugiere Vitest por compatibilidad nativa con ES Modules).
+  * Crear un script `pnpm test` que ejecute las pruebas en modo 'watch' y CI.
+  * Implementar mocks de Prisma (`PrismaClient`) para que las pruebas unitarias sean independientes de la base de datos física.
+  * Escribir pruebas unitarias para `auth.controller.js` (validando registro con contraseñas seguras, logueo con credenciales correctas/incorrectas).
+  * Escribir pruebas unitarias para `favorite.controller.js` y `favorite.service.js` (verificando la lógica de agregación, eliminación e idempotencia).
+
+* **Tareas Técnicas:**
+  * Instalar `vitest` como devDependency en el proyecto.
+  * Configurar los mocks del cliente Prisma en `src/prisma/__mocks__/prismaClient.js` o configurar mocks dinámicos en los archivos de test.
+  * Escribir la suite de pruebas unitarias para los servicios y controladores de autenticación y favoritos.
+  * Integrar las pruebas en los scripts de ejecución de `package.json`.
 
 ---
 
 ## Tablero Kanban de Referencia
 
 A modo orientativo, se sugiere organizar el tablero Kanban con los siguientes estados:
-1. **Backlog (Pila de Producto):** Todas las Historias de Usuario (US 1 a US 10).
+1. **Backlog (Pila de Producto):** Todas las Historias de Usuario (US 1 a US 6, US 9, y US 11 a US 13).
 2. **To Do (Para Hacer):** Tareas específicas de la US activa desglosadas por el equipo.
 3. **In Progress (En Proceso):** Tarea asignada a un desarrollador en ejecución activa.
 4. **Testing / Peer Review:** Implementación finalizada que se está validando localmente o revisando mediante Pull Request.

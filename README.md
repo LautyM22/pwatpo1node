@@ -130,18 +130,46 @@ Aplica el esquema de base de datos ejecutando las migraciones pendientes:
 npx prisma migrate dev --name init
 ```
 
-### 5. Semillar la Base de Datos (Seed)
+### 5. Generar el Cliente de Prisma
+Antes de semillar o arrancar la aplicación, debés generar localmente el cliente compilado de Prisma:
+```bash
+pnpm prisma generate
+```
+> [!TIP]
+> **Si usás Windows con PowerShell** y te da un error de seguridad de políticas (`PSSecurityException`), podés solucionarlo corriendo `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` en tu terminal, o usando directamente el comando `pnpm.cmd prisma generate` y `pnpm.cmd prisma db seed`.
+
+### 6. Semillar la Base de Datos (Seed)
 Puebla la base de datos con los registros de prueba requeridos (20 a 30 elementos para verificar scroll y paginados):
 ```bash
 pnpm prisma db seed
 ```
 
-### 6. Ejecutar el Servidor en Desarrollo
+### 7. Ejecutar el Servidor en Desarrollo
 Inicia el servidor Express localmente con recarga automática (`nodemon`):
 ```bash
 pnpm dev
 ```
 La API estará corriendo por defecto en `http://localhost:3000`.
+
+---
+
+## Pruebas de la API (Bruno)
+
+Para testear los endpoints de la API de forma local y colaborativa, implementamos una colección de **[Bruno](https://usebruno.com/)**, una alternativa open-source, offline-first y git-friendly a Postman.
+
+### 1. Instalación de Bruno
+Podés descargar e instalar Bruno en tu sistema operativo desde su sitio oficial:
+* [Descargar Bruno](https://www.usebruno.com/downloads) (disponible para Windows, macOS y Linux).
+
+### 2. Cómo usar la colección local
+1. Inicia la aplicación **Bruno**.
+2. Selecciona **"Open Collection"** (Abrir colección) en la pantalla de inicio.
+3. Busca y selecciona la carpeta [bruno/](/bruno/) que está en la raíz de este proyecto.
+4. En el selector de entornos ubicado arriba a la derecha (donde dice *No Environment*), selecciona **Development**. Esto cargará la variable de entorno `baseUrl` configurada como `http://localhost:3000`.
+
+### 3. Flujo de Autenticación Automático
+La colección tiene configurado un script post-response en la petición de **Login** (`POST /api/auth/login`). Al iniciar sesión exitosamente, el token JWT se guarda de manera automática en la variable de entorno de tiempo de ejecución `token`.
+Los endpoints que requieren autenticación (como **Get Me**) ya están configurados para usar esta variable `{{token}}` automáticamente en la cabecera de tipo Bearer Token.
 
 ---
 

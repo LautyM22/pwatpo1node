@@ -1,0 +1,23 @@
+meta {
+  name: Get Card by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/cards/:id
+  body: none
+  auth: none
+}
+
+params:query {
+  ~lang: es
+}
+
+params:path {
+  id: 1
+}
+
+headers {
+  ~Accept-Language: en
+}
