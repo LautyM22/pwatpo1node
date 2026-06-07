@@ -34,6 +34,40 @@
         }
       }
     },
+    "/api/about": {
+      "get": {
+        "summary": "Obtener información del proyecto y del equipo de desarrollo",
+        "description": "Retorna los datos de los desarrolladores del proyecto, sus roles y una frase estoica filosófica. Soporta internacionalización (mediante query parameter o cabecera HTTP Accept-Language).",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "Idioma preferido para los textos ('es' o 'en').",
+            "required": false,
+            "schema": { "type": "string", "enum": ["es", "en"] }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "Idioma preferido alternativo ('es' o 'en'). Por defecto es 'es'.",
+            "required": false,
+            "schema": { "type": "string", "enum": ["es", "en"], "default": "es" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Información obtenida correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/About"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/cards": {
       "get": {
         "summary": "Obtener catálogo de cartas",
@@ -533,6 +567,30 @@
             "type": "string",
             "format": "date-time",
             "example": "2026-06-01T18:52:00.000Z"
+          }
+        }
+      },
+      "About": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Sobre Nosotros" },
+          "description": { "type": "string", "example": "Información sobre el equipo de desarrollo y la filosofía que guía nuestro trabajo." },
+          "developers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string", "example": "Lautaro Medina" },
+                "role": { "type": "string", "example": "Desarrollador Fullstack" }
+              }
+            }
+          },
+          "stoicQuote": {
+            "type": "object",
+            "properties": {
+              "author": { "type": "string", "example": "Epicteto" },
+              "quote": { "type": "string", "example": "No busques que los eventos sucedan como deseas, sino desea que sucedan como suceden, y fluirás bien." }
+            }
           }
         }
       }
