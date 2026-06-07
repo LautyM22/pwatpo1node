@@ -10,16 +10,16 @@ import {
 const router = express.Router();
 
 // GET - Rutas de lectura
-router.get('/', getAllCardsController);
-router.get('/:id', getCardByIdController);
+router.get('/card', getAllCardsController);
+router.get('/card/:id', getCardByIdController);
 
 // POST - Crear carta
-router.post('/', createCardController);
+router.post('/card', createCardController);
 
 // PUT - Actualizar carta
-router.put('/:id', updateCardController);
+router.put('/card/:id', updateCardController);
 
 // DELETE - Eliminar carta
-router.delete('/:id', deleteCardController);
+router.delete('/card/:id', deleteCardController);
 
 export default router;
