@@ -2,7 +2,7 @@ import { getAllCards, getCardById, createCard, updateCard, deleteCard } from "..
 import { getLanguage } from "../utils/i18n.js";
 import { validateCard } from "../validations/card.validations.js";
 
-export async function getAllCardsController(req, res) {
+export async function getAllCards(req, res) {
   try {
     const page = parseInt(req.query.page, 10);
     const limit = parseInt(req.query.limit, 10);
@@ -16,7 +16,7 @@ export async function getAllCardsController(req, res) {
   }
 }
 
-export async function getCardByIdController(req, res) {
+export async function getCardById(req, res) {
   try {
     const id = req.params.id;
     
@@ -40,7 +40,7 @@ export async function getCardByIdController(req, res) {
   }
 }
 
-export async function createCardController(req, res) {
+export async function createCard(req, res) {
   try {
     const errors = validateCard(req.body);
 
@@ -55,7 +55,7 @@ export async function createCardController(req, res) {
   }
 }
 
-export async function updateCardController(req, res) {
+export async function updateCard(req, res) {
   try {
     const id = req.params.id;
     
@@ -84,7 +84,7 @@ export async function updateCardController(req, res) {
   }
 }
 
-export async function deleteCardController(req, res) {
+export async function deleteCard(req, res) {
   try {
     const id = req.params.id;
     
