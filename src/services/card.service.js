@@ -1,4 +1,4 @@
-import { prisma } from "../prisma/prismaClient.js";
+import prisma from "../prisma/prismaClient.js";
 import { mapCardToLang } from "../utils/i18n.js";
 
 export async function getAllCards(page, limit, lang) {
