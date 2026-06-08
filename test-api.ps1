@@ -15,6 +15,9 @@ function Invoke-Api($method, $uri, $body = $null) {
         ContentType = "application/json"
         UseBasicParsing = $true
     }
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        $params["SkipHttpErrorCheck"] = $true
+    }
     if ($body) {
         $params["Body"] = $body
     }
