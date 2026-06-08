@@ -5,6 +5,7 @@ import { createRequire } from 'module';
 import cardRoutes from './routes/card.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
+import aboutRoutes from './routes/about.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 const require = createRequire(import.meta.url);
@@ -30,6 +31,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api', cardRoutes);
 app.use('/api', authRoutes);
 app.use('/api', favoriteRoutes);
+app.use('/api', aboutRoutes);
 
 // Middleware global de errores (debe ir al final de las rutas)
 app.use(errorHandler);

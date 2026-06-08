@@ -6,15 +6,18 @@
 export function getLanguage(req) {
   // 1. Buscar en el query parameter ?lang=
   const queryLang = req.query.lang;
+
   if (queryLang === 'en' || queryLang === 'es') {
     return queryLang;
   }
 
   // 2. Buscar en la cabecera HTTP Accept-Language
   const acceptLanguage = req.headers['accept-language'];
+
   if (acceptLanguage) {
     // Buscar la primera ocurrencia de "es" o "en" (case-insensitive)
     const matches = acceptLanguage.match(/(es|en)/i);
+
     if (matches) {
       return matches[0].toLowerCase();
     }
@@ -35,6 +38,7 @@ export function getLanguage(req) {
 export function mapCardToLang(card, lang) {
   // Buscar traducción específica para la carta
   let cardTrans = card.translations.find(t => t.language === lang);
+
   if (!cardTrans) {
     // Fallback al idioma por defecto 'es'
     cardTrans = card.translations.find(t => t.language === 'es') || card.translations[0];
@@ -42,6 +46,7 @@ export function mapCardToLang(card, lang) {
 
   // Buscar traducción específica para el tipo de carta
   let typeTrans = card.type?.translations.find(t => t.language === lang);
+
   if (!typeTrans) {
     // Fallback al idioma por defecto 'es'
     typeTrans = card.type?.translations.find(t => t.language === 'es') || card.type?.translations[0];
@@ -49,6 +54,7 @@ export function mapCardToLang(card, lang) {
 
   // Buscar traducción específica para la rareza
   let rarityTrans = card.rarity?.translations.find(t => t.language === lang);
+  
   if (!rarityTrans) {
     // Fallback al idioma por defecto 'es'
     rarityTrans = card.rarity?.translations.find(t => t.language === 'es') || card.rarity?.translations[0];
