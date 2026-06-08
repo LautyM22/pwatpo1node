@@ -1,11 +1,72 @@
 # self-contained API integration test script
 $baseUrl = "http://localhost:3000"
 
-Write-Host "🚀 Starting Express server in the background..." -ForegroundColor Cyan
+# --- DB PRE-FLIGHT CHECKS ---
+Write-Host "[CHECK] Verifying database connectivity and seed data..." -ForegroundColor Yellow
+
+$dbCheckScript = @'
+import 'dotenv/config';
+import prisma from './src/prisma/prismaClient.js';
+try {
+    const count = await prisma.card.count();
+    if (count === 0) {
+        console.log("NO_SEED");
+        process.exit(2);
+    }
+    console.log("OK");
+    process.exit(0);
+} catch (e) {
+    if (e.code === 'ECONNREFUSED' || e.code === '57P01' || e.message.includes('Can-not-connect') || e.message.includes('connection') || e.message.includes('ECONNREFUSED')) {
+        console.log("NO_CONN");
+        process.exit(1);
+    } else if (e.code === 'P1003' || (e.message.includes('database') && e.message.includes('does not exist'))) {
+        console.log("NO_DB");
+        process.exit(5);
+    } else if (e.code === 'P2021' || e.message.includes('does not exist')) {
+        console.log("NO_TABLES");
+        process.exit(3);
+    } else {
+        console.log("UNKNOWN_ERROR:" + e.message);
+        process.exit(4);
+    }
+}
+'@
+
+$tempScriptPath = "temp-check-db.js"
+Set-Content -Path $tempScriptPath -Value $dbCheckScript
+
+$process = Start-Process node -ArgumentList $tempScriptPath -NoNewWindow -PassThru -Wait
+$exitCode = $process.ExitCode
+Remove-Item -Path $tempScriptPath -Force
+
+if ($exitCode -eq 1) {
+    Write-Host "[ERROR] No se puede conectar a la base de datos." -ForegroundColor Red
+    Write-Host "Asegurate de iniciar la base de datos (por ejemplo, ejecutando 'docker compose up -d db')." -ForegroundColor Yellow
+    Exit 1
+} elseif ($exitCode -eq 2) {
+    Write-Host "[ERROR] La base de datos esta vacia (0 cartas)." -ForegroundColor Red
+    Write-Host "Ejecuta las semillas para cargar los datos de prueba (por ejemplo, 'npx prisma db seed')." -ForegroundColor Yellow
+    Exit 1
+} elseif ($exitCode -eq 3) {
+    Write-Host "[ERROR] Las tablas de la base de datos no existen." -ForegroundColor Red
+    Write-Host "Ejecuta las migraciones de Prisma (por ejemplo, 'npx prisma migrate dev' o 'npx prisma db push')." -ForegroundColor Yellow
+    Exit 1
+} elseif ($exitCode -eq 5) {
+    Write-Host "[ERROR] La base de datos especificada en el .env no existe en el servidor." -ForegroundColor Red
+    Write-Host "Ejecuta las migraciones de Prisma para crearla y aplicar el esquema (por ejemplo, 'npx prisma migrate dev' o 'npx prisma db push')." -ForegroundColor Yellow
+    Exit 1
+} elseif ($exitCode -ne 0) {
+    Write-Host "[ERROR] Ocurrio un error inesperado al conectar a la base de datos." -ForegroundColor Red
+    Exit 1
+}
+
+Write-Host "[OK] Database is up and seeded!" -ForegroundColor Green
+
+Write-Host "[START] Starting Express server in the background..." -ForegroundColor Cyan
 $nodeProcess = Start-Process node -ArgumentList "src/index.js" -NoNewWindow -PassThru
 
 # Wait for server to boot
-Write-Host "⏳ Waiting for server to initialize..." -ForegroundColor Yellow
+Write-Host "[WAIT] Waiting for server to initialize..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
 
 function Invoke-Api($method, $uri, $body = $null) {
@@ -58,9 +119,9 @@ function Invoke-Api($method, $uri, $body = $null) {
 function Assert-Status($response, $expectedStatus, $testName) {
     $status = $response.StatusCode
     if ($status -eq $expectedStatus) {
-        Write-Host "✅ $testName - PASSED (Status $status)" -ForegroundColor Green
+        Write-Host "[PASS] $testName - PASSED (Status $status)" -ForegroundColor Green
     } else {
-        Write-Host "❌ $testName - FAILED (Expected $expectedStatus, got $status)" -ForegroundColor Red
+        Write-Host "[FAIL] $testName - FAILED (Expected $expectedStatus, got $status)" -ForegroundColor Red
         Write-Host "Response Content: $($response.Content)" -ForegroundColor Red
     }
 }
@@ -94,7 +155,7 @@ try {
         typeId = 1
         rarityId = 1
         translations = @(
-            @{ language = "es"; name = "Dragón QA"; description = "Carta de prueba de QA" }
+            @{ language = "es"; name = "Dragon QA"; description = "Carta de prueba de QA" }
             @{ language = "en"; name = "QA Dragon"; description = "QA test card" }
         )
     } | ConvertTo-Json -Depth 5
@@ -123,7 +184,7 @@ try {
             typeId = 1
             rarityId = 1
             translations = @(
-                @{ language = "es"; name = "Dragón QA Modificado"; description = "Modificada en prueba" }
+                @{ language = "es"; name = "Dragon QA Modificado"; description = "Modificada en prueba" }
                 @{ language = "en"; name = "Updated QA Dragon"; description = "Updated in test" }
             )
         } | ConvertTo-Json -Depth 5
@@ -177,7 +238,7 @@ try {
         typeId = 1
         rarityId = 1
         translations = @(
-            @{ language = "es"; name = "Dragón QA Modificado"; description = "Modificada en prueba" }
+            @{ language = "es"; name = "Dragon QA Modificado"; description = "Modificada en prueba" }
             @{ language = "en"; name = "Updated QA Dragon"; description = "Updated in test" }
         )
     } | ConvertTo-Json -Depth 5
@@ -193,7 +254,7 @@ try {
 } finally {
     # Clean up background server process
     if ($nodeProcess) {
-        Write-Host "🛑 Stopping Express server (PID: $($nodeProcess.Id))..." -ForegroundColor Cyan
+        Write-Host "[STOP] Stopping Express server (PID: $($nodeProcess.Id))..." -ForegroundColor Cyan
         Stop-Process -Id $nodeProcess.Id -Force
     }
 }
