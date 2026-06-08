@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { createRequire } from 'module';
-import cardRoutes from './routes/cardRoutes.js';
+import cardRoutes from './routes/card.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
 import aboutRoutes from './routes/about.routes.js';
@@ -15,8 +15,6 @@ const app = express();
 // Middlewares
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 app.use(express.json());
-// Middleware global de errores
-app.use(errorHandler);
 
 // Registrar rutas
 // Servir documentación de Swagger interactiva
@@ -34,5 +32,8 @@ app.use('/api', cardRoutes);
 app.use('/api', authRoutes);
 app.use('/api', favoriteRoutes);
 app.use('/api', aboutRoutes);
+
+// Middleware global de errores (debe ir al final de las rutas)
+app.use(errorHandler);
 
 export default app;

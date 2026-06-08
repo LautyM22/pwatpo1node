@@ -114,6 +114,77 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Crear una nueva carta",
+        "description": "Crea una carta nueva con sus traducciones en múltiples idiomas.",
+        "tags": ["Cards"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["cost", "atk", "def", "image", "typeId", "rarityId", "translations"],
+                "properties": {
+                  "cost": { "type": "integer", "minimum": 0, "example": 5 },
+                  "atk": { "type": "integer", "minimum": 0, "example": 8 },
+                  "def": { "type": "integer", "minimum": 0, "example": 10 },
+                  "image": { "type": "string", "example": "SirKaelen.webp" },
+                  "typeId": { "type": "integer", "minimum": 1, "example": 1 },
+                  "rarityId": { "type": "integer", "minimum": 1, "example": 1 },
+                  "translations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": ["language", "name", "description"],
+                      "properties": {
+                        "language": { "type": "string", "enum": ["es", "en"], "example": "es" },
+                        "name": { "type": "string", "example": "Sir Kaelen" },
+                        "description": { "type": "string", "example": "El último guardián del Sol Blanco" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Carta creada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Card" }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Datos inválidos" },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": { "type": "string" },
+                          "message": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Error interno del servidor" }
+        }
       }
     },
     "/api/cards/{id}": {
@@ -181,6 +252,140 @@
               }
             }
           }
+        }
+      },
+      "put": {
+        "summary": "Actualizar una carta existente",
+        "description": "Actualiza los datos de una carta existente incluyendo sus traducciones.",
+        "tags": ["Cards"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["cost", "atk", "def", "image", "typeId", "rarityId", "translations"],
+                "properties": {
+                  "cost": { "type": "integer", "minimum": 0, "example": 5 },
+                  "atk": { "type": "integer", "minimum": 0, "example": 8 },
+                  "def": { "type": "integer", "minimum": 0, "example": 10 },
+                  "image": { "type": "string", "example": "SirKaelen.webp" },
+                  "typeId": { "type": "integer", "minimum": 1, "example": 1 },
+                  "rarityId": { "type": "integer", "minimum": 1, "example": 1 },
+                  "translations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": ["language", "name", "description"],
+                      "properties": {
+                        "language": { "type": "string", "enum": ["es", "en"], "example": "es" },
+                        "name": { "type": "string", "example": "Sir Kaelen" },
+                        "description": { "type": "string", "example": "El último guardián del Sol Blanco" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Carta actualizada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Card" }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Datos inválidos" },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": { "type": "string" },
+                          "message": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Recurso no encontrado" }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Error interno del servidor" }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar una carta",
+        "description": "Elimina una carta de la base de datos.",
+        "tags": ["Cards"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Carta eliminada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Carta eliminada correctamente" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Recurso no encontrado" }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Error interno del servidor" }
         }
       }
     },
