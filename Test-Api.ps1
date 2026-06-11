@@ -62,12 +62,30 @@ if ($exitCode -eq 1) {
 
 Write-Host "[OK] Database is up and seeded!" -ForegroundColor Green
 
-Write-Host "[START] Starting Express server in the background..." -ForegroundColor Cyan
-$nodeProcess = Start-Process node -ArgumentList "src/index.js" -WorkingDirectory $PSScriptRoot -NoNewWindow -PassThru
+# --- CHECK IF EXPRESS SERVER IS ALREADY RUNNING ---
+$serverAlreadyRunning = $false
+try {
+    # Check if we get a response from health endpoint
+    $response = Invoke-WebRequest -Uri "$baseUrl/api/health" -Method Get -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop
+    if ($response.StatusCode -eq 200) {
+        $serverAlreadyRunning = $true
+    }
+} catch {
+    # Ignore connection failure, server is not running
+}
 
-# Wait for server to boot
-Write-Host "[WAIT] Waiting for server to initialize..." -ForegroundColor Yellow
-Start-Sleep -Seconds 3
+$nodeProcess = $null
+if ($serverAlreadyRunning) {
+    Write-Host "[OK] Express server is already running on $baseUrl. Reusing existing instance (Docker or Host)!" -ForegroundColor Green
+} else {
+    Write-Host "[START] Express server is not running. Starting local Express server in the background..." -ForegroundColor Cyan
+    $nodeProcess = Start-Process node -ArgumentList "src/index.js" -WorkingDirectory $PSScriptRoot -NoNewWindow -PassThru
+
+    # Wait for server to boot
+    Write-Host "[WAIT] Waiting for server to initialize..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 3
+}
+
 
 function Invoke-Api($method, $uri, $body = $null, $headers = $null) {
     $params = @{
