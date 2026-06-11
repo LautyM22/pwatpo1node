@@ -1,6 +1,6 @@
 import * as cardService from '../services/card.service.js';
 import { getLanguage, mapCardToLang } from '../utils/i18n.js';
-import { validateCard } from '../validations/card.validations.js';
+import { validateCard } from '../validations/card.validation.js';
 
 /**
  * Endpoint para obtener el listado de cartas.
