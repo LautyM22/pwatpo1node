@@ -7,10 +7,13 @@ import cardRoutes from './routes/card.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
 import aboutRoutes from './routes/about.routes.js';
+import healthRoutes from './routes/health.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+
 
 const require = createRequire(import.meta.url);
 const swaggerDocument = require('../docs/swagger.json');
+
 const app = express();
 
 // Middlewares
@@ -23,24 +26,20 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 
-// Registrar rutas
+
 // Servir documentación de Swagger interactiva
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Ruta de health check directa
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    message: 'API funcionando correctamente'
-  });
-});
 
+// Registrar rutas
+app.use('/api', healthRoutes);
 app.use('/api', cardRoutes);
 app.use('/api', authRoutes);
 app.use('/api', favoriteRoutes);
 app.use('/api', aboutRoutes);
 
-// Middleware global de errores (debe ir al final de las rutas)
+
+// Middleware global de errores
 app.use(errorHandler);
 
 export default app;

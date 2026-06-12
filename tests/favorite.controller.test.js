@@ -14,6 +14,7 @@ describe('Favorite Controller - Unit Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    getLanguage.mockReturnValue('es'); // Idioma por defecto para los tests
 
     req = {
       user: { id: 1 },
@@ -68,7 +69,7 @@ describe('Favorite Controller - Unit Tests', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Datos inválidos',
-          details: [{ field: 'cardId', message: 'El cardId debe ser un número entero válido' }]
+          details: [{ field: 'cardId', message: 'El ID de la carta debe ser un número entero válido' }]
         })
       );
     });
@@ -83,7 +84,8 @@ describe('Favorite Controller - Unit Tests', () => {
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'Recurso no encontrado'
+          error: 'Recurso no encontrado',
+          message: 'La carta solicitada no existe'
         })
       );
     });
@@ -115,9 +117,9 @@ describe('Favorite Controller - Unit Tests', () => {
     });
   });
 
-  describe('DELETE /api/favorites/:cardId', () => {
-    it('debería retornar 400 si el cardId de los parámetros no es válido', async () => {
-      req.params = { cardId: 'abc' };
+  describe('DELETE /api/favorites/:id', () => {
+    it('debería retornar 400 si el id de los parámetros no es válido', async () => {
+      req.params = { id: 'abc' };
 
       await removeFavorite(req, res, next);
 
@@ -125,13 +127,13 @@ describe('Favorite Controller - Unit Tests', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Datos inválidos',
-          details: [{ field: 'cardId', message: 'El ID de la carta debe ser un número entero válido' }]
+          details: [{ field: 'id', message: 'El ID de la carta debe ser un número entero válido' }]
         })
       );
     });
 
     it('debería eliminar la carta de favoritos con éxito y retornar 200', async () => {
-      req.params = { cardId: '10' };
+      req.params = { id: '10' };
       favoriteService.removeFavorite.mockResolvedValue({ userId: 1, cardId: 10 });
 
       await removeFavorite(req, res, next);
@@ -144,7 +146,7 @@ describe('Favorite Controller - Unit Tests', () => {
     });
 
     it('debería delegar el error a next si ocurre una excepción al eliminar', async () => {
-      req.params = { cardId: '10' };
+      req.params = { id: '10' };
       const error = new Error('Deletion failure');
       favoriteService.removeFavorite.mockRejectedValue(error);
 
