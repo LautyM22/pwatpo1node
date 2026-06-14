@@ -1,3 +1,6 @@
+/**
+ * Funciones auxiliares para validación de datos.
+ */
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -14,6 +17,12 @@ function isEmptyObject(obj) {
   return obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length === 0;
 }
 
+/**
+ * Valida el array de traducciones enviado en el body.
+ * 
+ * @param {Array} translations - Array de traducciones.
+ * @returns {Array<{field: string, message: string}>} Errores de validación de traducciones.
+ */
 function validateTranslations(translations) {
   const errors = [];
 
@@ -53,14 +62,23 @@ function validateTranslations(translations) {
   return errors;
 }
 
-function validateCard(body) {
+/**
+ * Valida los datos del body de una carta de forma manual, soportando traducciones anidadas.
+ * Retorna un array con los detalles de los errores encontrados.
+ * 
+ * @param {Object} body - El cuerpo de la petición.
+ * @returns {Array<{field: string, message: string}>} Array de errores de validación.
+ */
+export function validateCard(body) {
   const errors = [];
 
+  // 1. Validar que no sea un objeto vacío o nulo
   if (isEmptyObject(body)) {
     errors.push({ field: 'body', message: 'El body no puede estar vacío' });
     return errors;
   }
 
+  // 2. Validar campos obligatorios y tipos
   if (body.cost === undefined || !isPositiveInteger(body.cost)) {
     errors.push({ field: 'cost', message: 'Debe ser un número entero >= 0' });
   }
@@ -85,6 +103,7 @@ function validateCard(body) {
     errors.push({ field: 'rarityId', message: 'Debe ser un ID válido (número > 0)' });
   }
 
+  // 3. Validar traducción estructurada
   if (body.translations) {
     const translationErrors = validateTranslations(body.translations);
     errors.push(...translationErrors);
@@ -94,12 +113,3 @@ function validateCard(body) {
 
   return errors;
 }
-
-export { 
-  isNonEmptyString, 
-  isPositiveInteger, 
-  isId, 
-  isEmptyObject, 
-  validateTranslations,
-  validateCard
-};

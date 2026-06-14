@@ -1,0 +1,38 @@
+meta {
+  name: Create Card
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/cards
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "cost": 4,
+    "atk": 5,
+    "def": 6,
+    "image": "dragon_test.webp",
+    "typeId": 1,
+    "rarityId": 1,
+    "translations": [
+      {
+        "language": "es",
+        "name": "Dragón de Prueba",
+        "description": "Un dragón creado con el propósito de probar las APIs de escritura."
+      },
+      {
+        "language": "en",
+        "name": "Test Dragon",
+        "description": "A dragon created for the purpose of testing write APIs."
+      }
+    ]
+  }
+}

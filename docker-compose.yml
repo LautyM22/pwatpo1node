@@ -25,14 +25,16 @@ services:
       - /app/node_modules
     ports:
       - "3000:3000"
+      - "9229:9229"
     environment:
       PORT: 3000
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-tpexpress}?schema=public
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       db:
         condition: service_healthy
     command: >
-      sh -c "corepack enable && pnpm install && pnpm run dev"
+      sh -c "corepack enable && pnpm install --ignore-scripts && pnpm prisma generate && pnpm run ${APP_START_SCRIPT:-dev}"
 
 volumes:
   pgdata:
