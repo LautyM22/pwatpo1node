@@ -104,6 +104,7 @@ model Role {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  name      String
   password  String
   roleId    Int
   role      Role     @relation(fields: [roleId], references: [id])
@@ -131,6 +132,7 @@ model RefreshToken {
 
   @@map("refresh_tokens")
 }
+
 
 // Entidad Relacional para Favoritos
 model Favorite {

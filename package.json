@@ -1,6 +1,6 @@
 {
   "name": "tpexpress",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Este repositorio contiene el desarrollo del backend (API REST) para dar soporte a la aplicación web desarrollada en React, reemplazando la persistencia en `localStorage` por una base de datos PostgreSQL persistida de forma real.",
   "main": "src/index.js",
   "directories": {
