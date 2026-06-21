@@ -12,10 +12,7 @@
     "start": "node src/index.js",
     "postinstall": "prisma generate",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "release:patch": "powershell -ExecutionPolicy Bypass -File ./scripts/Release-Project.ps1 -ReleaseType patch",
-    "release:minor": "powershell -ExecutionPolicy Bypass -File ./scripts/Release-Project.ps1 -ReleaseType minor",
-    "release:major": "powershell -ExecutionPolicy Bypass -File ./scripts/Release-Project.ps1 -ReleaseType major"
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -37,6 +34,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "i18next": "^26.3.1",
+    "i18next-http-middleware": "^3.9.7",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.21.0",
     "swagger-ui-express": "^5.0.1"
@@ -44,7 +43,6 @@
   "devDependencies": {
     "nodemon": "^3.1.14",
     "prisma": "^7.8.0",
-    "standard-version": "^9.5.0",
     "vitest": "^4.1.8"
   },
   "prisma": {
