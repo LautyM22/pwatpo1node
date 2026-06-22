@@ -234,4 +234,5 @@ El proyecto sigue un patrón de separación de responsabilidades:
 | **POST** | `/api/[entidad]` | Crea un nuevo elemento (requiere validación del body). | `201`, `400`, `500` |
 | **PUT** | `/api/[entidad]/:id` | Modifica un elemento existente (requiere validación del body). | `200`, `400`, `404`, `500` |
 | **DELETE** | `/api/[entidad]/:id` | Elimina un elemento por su ID. | `200`, `204`, `404`, `500` |
-
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LautyM22/pwatpo1node)
